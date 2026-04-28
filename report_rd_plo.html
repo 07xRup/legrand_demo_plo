@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --lg-red:#E2001A;--lg-red-l:#FFF0F1;--lg-red-t:#FECDD1;
+  --lg-dark:#1A1A2E;--lg-mid:#2D3561;
+  --bg:#F5F6F8;--bg2:#fff;--bg3:#F9FAFB;--bg4:#EEF0F4;
+  --border:#E2E5ED;--border2:#D0D4DF;
+  --text:#0F1117;--text2:#2D3561;--text3:#5A607A;--text4:#9298B0;
+  --green:#0E8A4A;--green-l:#EDFAF4;--green-t:#A7EDD0;
+  --yellow:#D48800;--yellow-l:#FFF8E6;--yellow-t:#FFE599;
+  --red:#C9202E;--red-l:#FFF0F1;--red-t:#FECDD1;
+  --blue:#1255CC;--blue-l:#EBF1FF;--blue-t:#BFCFFF;
+  --purple:#6B29C3;--purple-l:#F3EEFF;--purple-t:#D7BEFF;
+  --orange:#C45C00;--orange-l:#FFF3E8;
+  --shadow:0 1px 4px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;background:var(--bg);color:var(--text)}
+.header{background:var(--bg2);border-bottom:3px solid var(--lg-red);padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.lg-mark{width:30px;height:20px;background:var(--lg-red);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lg-mark span{color:#fff;font-size:8px;font-weight:900}
+.h-title{font-size:13px;font-weight:700;color:var(--lg-dark);letter-spacing:-.01em}
+.h-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.h-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.badge{font-size:10px;padding:3px 9px;border-radius:4px;font-weight:600}
+.badge-pv{background:var(--lg-mid);color:#fff}
+.badge-live{background:var(--green-l);color:var(--green);border:1px solid var(--green-t);display:flex;align-items:center;gap:4px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sync{font-size:10px;color:var(--text4)}
+/* TABS */
+.tab-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0}
+.ptab{font-size:11px;font-weight:500;color:var(--text3);padding:10px 18px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .15s;font-family:inherit}
+.ptab:hover{color:var(--lg-red);background:var(--lg-red-l)}
+.ptab.active{color:var(--lg-red);border-bottom-color:var(--lg-red);font-weight:600}
+.panel{display:none}.panel.active{display:block}
+.main{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.persona-bar{padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.pb-left .pb-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.pb-left .pb-role{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px}
+.pb-right{display:flex;gap:6px;flex-wrap:wrap}
+.pb-tag{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:3px 9px;font-size:10px;color:rgba(255,255,255,.85);font-weight:500}
+.pb-rd{background:linear-gradient(135deg,#0E5C33 0%,#0E8A4A 100%)}
+.pb-plo{background:linear-gradient(135deg,var(--lg-dark) 0%,var(--lg-mid) 100%)}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid transparent;display:flex;flex-direction:column;gap:2px}
+.kpi.k-r{border-left-color:var(--lg-red)}.kpi.k-b{border-left-color:var(--blue)}
+.kpi.k-g{border-left-color:var(--green)}.kpi.k-y{border-left-color:var(--yellow)}
+.kpi.k-p{border-left-color:var(--purple)}.kpi.k-d{border-left-color:var(--lg-dark)}
+.kpi.k-o{border-left-color:var(--orange)}
+.kpi-lbl{font-size:10px;color:var(--text3);font-weight:500}
+.kpi-val{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1.1}
+.kpi-sub{font-size:10px;color:var(--text4)}
+.kpi-delta{font-size:10px;font-weight:600;margin-top:2px}
+.d-up{color:var(--green)}.d-dn{color:var(--red)}.d-flat{color:var(--yellow)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.card-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ct{width:3px;border-radius:2px;flex-shrink:0}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:5px 8px;border-bottom:2px solid var(--border);background:var(--bg3);text-align:left}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--blue-l)}
+.pname{font-weight:600;font-size:11px}
+.pmeta{font-size:9px;color:var(--text4);margin-top:1px}
+.b{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.b-oc{background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-t)}
+.b-noc{background:var(--green-l);color:var(--green);border:1px solid var(--green-t)}
+.b-a{background:var(--red-l);color:var(--red);border:1px solid var(--red-t)}
+.b-b{background:var(--yellow-l);color:var(--yellow);border:1px solid var(--yellow-t)}
+.b-ok{background:var(--green-l);color:var(--green);border:1px solid var(--green-t)}
+.b-warn{background:var(--yellow-l);color:var(--yellow);border:1px solid var(--yellow-t)}
+.b-bad{background:var(--red-l);color:var(--red);border:1px solid var(--red-t)}
+.b-plan{background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-t)}
+.b-act{background:var(--green-l);color:var(--green);border:1px solid var(--green-t)}
+.b-gen{background:var(--bg4);color:var(--text3);border:1px solid var(--border2)}
+.b-cre{background:var(--red-l);color:var(--red);border:1px solid var(--red-t)}
+.row{display:grid;gap:10px}
+.r5{grid-template-columns:repeat(5,1fr)}
+.r4{grid-template-columns:repeat(4,1fr)}
+.r2{grid-template-columns:1fr 1fr}
+.r3{grid-template-columns:1fr 1fr 1fr}
+.r2-1{grid-template-columns:2fr 1fr}
+.r3-2{grid-template-columns:3fr 2fr}
+.ch-sm{height:130px}.ch-md{height:160px}.ch-lg{height:200px}.ch-xl{height:240px}
+.alert{border-radius:6px;padding:7px 10px;font-size:10px;margin-top:6px;line-height:1.6}
+.al-r{background:var(--red-l);border:1px solid var(--red-t);color:var(--red)}
+.al-y{background:var(--yellow-l);border:1px solid var(--yellow-t);color:var(--yellow)}
+.al-g{background:var(--green-l);border:1px solid var(--green-t);color:var(--green)}
+.al-b{background:var(--blue-l);border:1px solid var(--blue-t);color:var(--blue)}
+.ms-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.ms-item:last-child{border-bottom:none}
+.ms-date{font-size:10px;font-weight:600;color:var(--text3);width:52px;flex-shrink:0}
+.ms-info{flex:1}
+.ms-name{font-size:11px;font-weight:500;color:var(--text)}
+.ms-proj{font-size:9px;color:var(--text4);margin-top:1px}
+.mstat{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.mstat:last-child{border-bottom:none}
+.msk{color:var(--text3)}.msv{font-weight:700;color:var(--text)}
+.cap-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.cap-lbl{font-size:10px;color:var(--text2);width:95px;flex-shrink:0;font-weight:500}
+.cap-track{flex:1;height:14px;background:var(--bg4);border-radius:3px;overflow:hidden;border:1px solid var(--border)}
+.cap-fill{height:100%;border-radius:2px}
+.cap-pct{font-size:10px;width:44px;text-align:right;flex-shrink:0;font-weight:700}
+.annot{font-size:9px;color:var(--text4);margin-top:5px;line-height:1.5}
+.footer{background:var(--bg2);border-top:1px solid var(--border);padding:6px 16px;display:flex;align-items:center;justify-content:space-between}
+.foot-l,.foot-r{font-size:9px;color:var(--text4)}
+.foot-r{display:flex;gap:10px}
+.foot-acc{color:var(--lg-red);font-weight:700}
+/* IMPUTATION */
+.imp-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.imp-item:last-child{border-bottom:none}
+.imp-h{font-size:11px;font-weight:700;color:var(--text2);width:40px;flex-shrink:0;text-align:right}
+.imp-info{flex:1}
+.imp-name{font-size:11px;font-weight:500;color:var(--text)}
+.imp-proj{font-size:9px;color:var(--text3);margin-top:1px}
+/* SCORING */
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="lg-mark"><span>LG</span></div>
+  <div>
+    <div class="h-title">Ressources R&D &amp; Pilotage Ligne Produit</div>
+    <div class="h-sub">Capacités · Imputations · Codes projets · Scoring multicritères · Arbitrages PLO</div>
+  </div>
+  <div class="h-right">
+    <span class="badge badge-pv">Planview Project Advantage</span>
+    <span class="badge badge-live"><span class="dot"></span>Live</span>
+    <span class="sync">27 avr. 2026 — 08h15</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="ptab active" onclick="switchTab('rd',this)">🔬 Resp. Centre R&D — Limoges</button>
+  <button class="ptab" onclick="switchTab('plo',this)">🏷 PLO / PLR — Sophie Renaud</button>
+</div>
+
+<!-- ═══ R&D ═══ -->
+<div class="panel active" id="panel-rd">
+<div class="persona-bar pb-rd">
+  <div class="pb-left">
+    <div class="pb-name">🔬 Resp. Centre R&D — Limoges</div>
+    <div class="pb-role">Capacité · Imputations · Codes projets locaux · Plans de charge · Validation</div>
+  </div>
+  <div class="pb-right">
+    <span class="pb-tag">42 FTE · Centre Limoges</span>
+    <span class="pb-tag">5 compétences</span>
+    <span class="pb-tag">8 projets actifs</span>
+    <span class="pb-tag">47 imputations à valider</span>
+  </div>
+</div>
+<div class="main">
+<div class="row r5">
+  <div class="kpi k-r">
+    <div class="kpi-lbl">Surcharge max</div>
+    <div class="kpi-val">118<span style="font-size:13px">%</span></div>
+    <div class="kpi-sub">Électronique Mai-Juin 25</div>
+    <div class="kpi-delta d-dn">⚠ Action requise</div>
+  </div>
+  <div class="kpi k-y">
+    <div class="kpi-lbl">Imputations à valider</div>
+    <div class="kpi-val">47</div>
+    <div class="kpi-sub">Cette semaine · 3 projets</div>
+    <div class="kpi-delta d-flat">Délai 48h</div>
+  </div>
+  <div class="kpi k-b">
+    <div class="kpi-lbl">Codes locaux actifs</div>
+    <div class="kpi-val">12</div>
+    <div class="kpi-sub">8 projets en cours</div>
+    <div class="kpi-delta d-up">2 à créer (LG-OP-001)</div>
+  </div>
+  <div class="kpi k-g">
+    <div class="kpi-lbl">FTE disponibles</div>
+    <div class="kpi-val">42</div>
+    <div class="kpi-sub">Centre Limoges total</div>
+    <div class="kpi-delta d-flat">Charge moy. 84%</div>
+  </div>
+  <div class="kpi k-p">
+    <div class="kpi-lbl">Projets actifs</div>
+    <div class="kpi-val">8</div>
+    <div class="kpi-sub">Centre Limoges</div>
+    <div class="kpi-delta d-dn">3 Classe A simultanés ⚠</div>
+  </div>
+</div>
+
+<div class="row r2">
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--orange)"></div>Capacité R&D — Centre Limoges · Mai–Août 2025</div>
+    <div class="ch-lg"><canvas id="cCapHisto"></canvas></div>
+    <div class="annot">Évolution mensuelle de la charge par compétence · Surcharge Électronique en Mai-Juin (DPX³ + LS990 simultanés)</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--blue)"></div>Allocations multi-projets — Centre Limoges (FTE)</div>
+    <div class="ch-lg"><canvas id="cAllocProj"></canvas></div>
+    <div class="annot">FTE alloués par projet et par compétence · 8 projets actifs · BF.40 BF.38</div>
+  </div>
+</div>
+
+<div class="row" style="grid-template-columns:1.5fr 1fr 1fr">
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--green)"></div>Matrice codes projets locaux — Limoges</div>
+    <table class="tbl">
+      <thead><tr><th>Code Groupe</th><th>Code Local</th><th>Projet</th><th>Statut</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="pname" style="font-family:monospace;font-size:10px">LG-NP-001</td>
+          <td style="font-family:monospace;font-size:10px;color:var(--text2)">FR-LIM-2024-001</td>
+          <td><div class="pmeta">LS990 Connected · Limoges</div></td>
+          <td><span class="b b-act">Actif</span></td>
+          <td style="font-size:10px;color:var(--green)">✓ Imputations ouvertes</td>
+        </tr>
+        <tr>
+          <td class="pname" style="font-family:monospace;font-size:10px">LG-NP-004</td>
+          <td style="font-family:monospace;font-size:10px;color:var(--text2)">FR-LIM-2024-004</td>
+          <td><div class="pmeta">DPX³ 250 · Limoges + Milan</div></td>
+          <td><span class="b b-warn">Partiel</span></td>
+          <td style="font-size:10px;color:var(--yellow)">⚠ Code Milan manquant</td>
+        </tr>
+        <tr>
+          <td class="pname" style="font-family:monospace;font-size:10px">LG-NP-003</td>
+          <td style="font-family:monospace;font-size:10px;color:var(--text2)">FR-LIM-2024-003</td>
+          <td><div class="pmeta">Céliane Netatmo V3 · Limoges</div></td>
+          <td><span class="b b-act">Actif</span></td>
+          <td style="font-size:10px;color:var(--green)">✓ Imputations ouvertes</td>
+        </tr>
+        <tr>
+          <td class="pname" style="font-family:monospace;font-size:10px">LG-OP-001</td>
+          <td style="font-family:monospace;font-size:10px;color:var(--red)">CN-xxx · IN-xxx</td>
+          <td><div class="pmeta">Manuf. Duplication · China + India</div></td>
+          <td><span class="b b-cre">À créer</span></td>
+          <td style="font-size:10px;color:var(--red)">⚠ J+7 après V0 Nov-24</td>
+        </tr>
+        <tr>
+          <td class="pname" style="font-family:monospace;font-size:10px;color:var(--text4)">GEN-2024-PRE</td>
+          <td style="font-family:monospace;font-size:10px;color:var(--text4)">Code générique</td>
+          <td><div class="pmeta">Tous projets Pré-V0</div></td>
+          <td><span class="b b-gen">Générique</span></td>
+          <td style="font-size:10px;color:var(--text3)">Auto-clôture à V0</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert al-y">⚠ <strong>BF.27 ÉLIMINATOIRE</strong> — Codes CN-xxx + IN-xxx LG-OP-001 à créer impérativement. PJM garant complétude. Délai : J+7 après V0 (Nov-24). Action urgente.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--blue)"></div>Imputations à valider — Semaine 17</div>
+    <div class="imp-item">
+      <div class="imp-h">47 h</div>
+      <div class="imp-info">
+        <div class="imp-name">LG-NP-001 LS990 — Électronique</div>
+        <div class="imp-proj">3 ressources · FR-LIM-2024-001 · Semaine 17</div>
+      </div>
+      <span class="b b-warn">À valider</span>
+    </div>
+    <div class="imp-item">
+      <div class="imp-h">32 h</div>
+      <div class="imp-info">
+        <div class="imp-name">LG-NP-004 DPX³ — Mécanique</div>
+        <div class="imp-proj">2 ressources · FR-LIM-2024-004 · Sem. 17</div>
+      </div>
+      <span class="b b-warn">À valider</span>
+    </div>
+    <div class="imp-item">
+      <div class="imp-h">18 h</div>
+      <div class="imp-info">
+        <div class="imp-name">LG-NP-003 Céliane — IoT</div>
+        <div class="imp-proj">1 ressource · FR-LIM-2024-003 · Sem. 16</div>
+      </div>
+      <span class="b b-plan">En cours</span>
+    </div>
+    <div class="imp-item">
+      <div class="imp-h">— h</div>
+      <div class="imp-info">
+        <div class="imp-name">LG-OP-001 Manuf. Dup.</div>
+        <div class="imp-proj">Code CN-xxx + IN-xxx manquants · Blocage</div>
+      </div>
+      <span class="b b-bad">Bloqué</span>
+    </div>
+    <div class="alert al-b">ℹ Imputations Pré-V0 → code générique GEN-2024-PRE. Bascule automatique vers FR-LIM-xxx à la validation V0. BF.32 BF.10</div>
+    <div style="margin-top:10px">
+      <div class="card-title" style="margin-bottom:6px"><div class="ct" style="height:14px;background:var(--orange)"></div>Capacité instantanée — Mai-Juin 25</div>
+      <div class="cap-row">
+        <div class="cap-lbl">Électronique</div>
+        <div class="cap-track"><div class="cap-fill" style="width:100%;background:var(--red)"></div></div>
+        <div class="cap-pct" style="color:var(--red)">118% ⚠</div>
+      </div>
+      <div class="cap-row">
+        <div class="cap-lbl">Log. embarqué</div>
+        <div class="cap-track"><div class="cap-fill" style="width:94%;background:var(--yellow)"></div></div>
+        <div class="cap-pct" style="color:var(--yellow)">94%</div>
+      </div>
+      <div class="cap-row">
+        <div class="cap-lbl">Connectivité</div>
+        <div class="cap-track"><div class="cap-fill" style="width:85%;background:var(--yellow)"></div></div>
+        <div class="cap-pct" style="color:var(--yellow)">85%</div>
+      </div>
+      <div class="cap-row">
+        <div class="cap-lbl">Mécanique</div>
+        <div class="cap-track"><div class="cap-fill" style="width:72%;background:var(--green)"></div></div>
+        <div class="cap-pct" style="color:var(--green)">72%</div>
+      </div>
+      <div class="cap-row">
+        <div class="cap-lbl">Qualité</div>
+        <div class="cap-track"><div class="cap-fill" style="width:56%;background:var(--green)"></div></div>
+        <div class="cap-pct" style="color:var(--green)">56%</div>
+      </div>
+      <div class="alert al-r">⚠ Électronique 118% — DPX³ + LS990 simultanés. Anvi : réallouer 2 FTE vers LS990 en Avril.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--purple)"></div>Plan de charge — Prévision Juin–Sept 25</div>
+    <div class="ch-lg"><canvas id="cCapForecast"></canvas></div>
+    <div class="annot">Projection charge mensuelle après réallocation Anvi · Électronique retombe sous 100% en Juil.</div>
+  </div>
+</div>
+</div>
+</div><!-- /panel-rd -->
+
+<!-- ═══ PLO ═══ -->
+<div class="panel" id="panel-plo">
+<div class="persona-bar pb-plo">
+  <div class="pb-left">
+    <div class="pb-name">🏷 Sophie Renaud — PLO</div>
+    <div class="pb-role">Product Line Owner · Résidentiel Connecté · Arbitrages · Priorisation ligne produit</div>
+  </div>
+  <div class="pb-right">
+    <span class="pb-tag">12 projets — ma ligne</span>
+    <span class="pb-tag">3 Classe A</span>
+    <span class="pb-tag">Budget ligne 28,4 M€</span>
+    <span class="pb-tag">Y3 TO estimé 142 M€</span>
+  </div>
+</div>
+<div class="main">
+<div class="row r4">
+  <div class="kpi k-d">
+    <div class="kpi-lbl">Projets — ma ligne</div>
+    <div class="kpi-val">12</div>
+    <div class="kpi-sub">8 OC · 3 NOC · 1 INN</div>
+  </div>
+  <div class="kpi k-r">
+    <div class="kpi-lbl">Projets Classe A</div>
+    <div class="kpi-val">3</div>
+    <div class="kpi-sub">LS990 · Céliane · DPX³</div>
+    <div class="kpi-delta d-dn">1 en dérive ≥ 3 sem.</div>
+  </div>
+  <div class="kpi k-y">
+    <div class="kpi-lbl">Budget ligne (M€)</div>
+    <div class="kpi-val">28,4</div>
+    <div class="kpi-sub">Forecast : 31,2 M€</div>
+    <div class="kpi-delta d-flat">Écart +9,8% vs initial</div>
+  </div>
+  <div class="kpi k-g">
+    <div class="kpi-lbl">Y3 TO estimé (M€)</div>
+    <div class="kpi-val">142</div>
+    <div class="kpi-sub">Projets OC ma ligne</div>
+    <div class="kpi-delta d-up">↑ +5% vs N-1</div>
+  </div>
+</div>
+
+<div class="row r2">
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--blue)"></div>Scoring multicritères — Projets Classe A (ma ligne)</div>
+    <div class="ch-xl"><canvas id="cScoring"></canvas></div>
+    <div class="annot">Scoring configurable · BF.21 — 6 critères : Valeur stratégique · Alignement Groupe · Faisabilité · ROI/Coût · Risque maîtrisé · Innovation</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--green)"></div>Y3 Turnover — Estimé V0 vs Réel Vn (M€)</div>
+    <div class="ch-md"><canvas id="cY3"></canvas></div>
+    <div class="annot">LS990 Vn : réel 38M€ vs estimé 42M€ — écart -9,5% · DPX³ et Céliane : monitoring Vn à venir</div>
+    <div style="margin-top:10px">
+      <div class="card-title" style="margin-bottom:6px"><div class="ct" style="height:14px;background:var(--yellow)"></div>Budget ligne par projet (M€)</div>
+      <div class="ch-md"><canvas id="cBudgetLigne"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="row r3-2">
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--lg-red)"></div>Projets Classe A — Statut, scoring &amp; arbitrages PLO</div>
+    <table class="tbl">
+      <thead><tr><th>Projet</th><th>Cl.</th><th>Score</th><th>Jalon</th><th>Dérive</th><th>Y3 TO</th><th>Décision PLO</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="pname">LS990 Connected</div><div class="pmeta">V2 → Mars-25 · Marc Delacroix · Limoges</div></td>
+          <td><span class="b b-a">A</span></td>
+          <td style="font-weight:700;color:var(--blue)">78/100</td>
+          <td style="color:var(--yellow);font-size:10px;font-weight:600">V2 → Mars-25</td>
+          <td><span class="b b-warn">+3 sem.</span></td>
+          <td style="font-weight:600">42 M€</td>
+          <td style="font-size:10px;color:var(--text3)">Ajustement certif. CE accepté</td>
+        </tr>
+        <tr>
+          <td><div class="pname">DPX³ 250 Intelligent</div><div class="pmeta">V1 → Avr-25 · Claire Vasseur · Limoges + Milan</div></td>
+          <td><span class="b b-a">A</span></td>
+          <td style="font-weight:700;color:var(--red)">65/100</td>
+          <td style="color:var(--red);font-size:10px;font-weight:600">V1 → Avr-25 ⚠</td>
+          <td><span class="b b-bad">+6 sem.</span></td>
+          <td style="font-weight:600">67 M€</td>
+          <td style="font-size:10px;color:var(--red);font-weight:600">→ PRS requis</td>
+        </tr>
+        <tr>
+          <td><div class="pname">Céliane Netatmo V3</div><div class="pmeta">Pré-V0 → Avr-25 · Thomas Brun · Limoges</div></td>
+          <td><span class="b b-a">A</span></td>
+          <td style="font-weight:700;color:var(--green)">81/100</td>
+          <td style="color:var(--blue);font-size:10px;font-weight:600">Pré-V0</td>
+          <td><span class="b b-ok">✓ On track</span></td>
+          <td style="font-weight:600">31 M€</td>
+          <td style="font-size:10px;color:var(--text3)">Classe A confirmée</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert al-y" style="margin-top:8px">⚠ Classification DPX³ : Classe A auto-calculée (Y3 TO 67M€). Override PLO possible si réduction scope — historisation requise (BF.62).</div>
+
+    <div style="margin-top:12px">
+      <div class="card-title" style="margin-bottom:6px"><div class="ct" style="height:14px;background:var(--purple)"></div>Décisions instances — Historique PR / MMM</div>
+      <div class="ms-item">
+        <div class="ms-date">22 Avr</div>
+        <div class="ms-info"><div class="ms-name">DPX³ — Dérive V1 acceptée +6 sem.</div><div class="ms-proj">Plan mitigation renforcé · Actions Claire V. · PRS convoqué</div></div>
+        <span class="b b-bad">PRS 🚩</span>
+      </div>
+      <div class="ms-item">
+        <div class="ms-date">10 Avr</div>
+        <div class="ms-info"><div class="ms-name">LG-OP-001 — Budget Sc1 5,2 M€ approuvé</div><div class="ms-proj">Make China/Buy India retenu · CAPEX 406k€ · Indian supplier validé</div></div>
+        <span class="b b-ok">Validé</span>
+      </div>
+      <div class="ms-item">
+        <div class="ms-date">28 Mar</div>
+        <div class="ms-info"><div class="ms-name">LS990 — Classe A confirmée PLO Sophie</div><div class="ms-proj">Override scoring 78→A · Justification archivée (BF.62)</div></div>
+        <span class="b b-plan">Archivé</span>
+      </div>
+      <div class="ms-item">
+        <div class="ms-date">15 Mar</div>
+        <div class="ms-info"><div class="ms-name">Céliane Netatmo — Assignation Thomas Brun PJM</div><div class="ms-proj">Workflow assignation validé · Équipe notifiée Teams (BF.77 BF.11)</div></div>
+        <span class="b b-ok">Validé</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="ct" style="height:14px;background:var(--orange)"></div>Répartition budget ligne par catégorie</div>
+    <div class="ch-sm" style="display:flex;align-items:center;justify-content:center"><canvas id="cDonutPlo" style="max-width:130px;max-height:130px"></canvas></div>
+    <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px">
+      <div class="mstat"><span class="msk" style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--blue);display:inline-block"></span>Offer Creation</span><span class="msv">22,1 M€ <span style="color:var(--text3);font-weight:400;font-size:10px">(78%)</span></span></div>
+      <div class="mstat"><span class="msk" style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Non-OC</span><span class="msv">5,2 M€ <span style="color:var(--text3);font-weight:400;font-size:10px">(18%)</span></span></div>
+      <div class="mstat"><span class="msk" style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--purple);display:inline-block"></span>Innovation</span><span class="msv">1,1 M€ <span style="color:var(--text3);font-weight:400;font-size:10px">(4%)</span></span></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="card-title" style="margin-bottom:6px"><div class="ct" style="height:14px;background:var(--blue)"></div>Alignement stratégique — Ma ligne</div>
+      <div class="mstat"><span class="msk">Axe Connectivité</span><span class="msv" style="color:var(--blue)">5 projets</span></div>
+      <div class="mstat"><span class="msk">Axe Efficacité énergétique</span><span class="msv" style="color:var(--green)">3 projets</span></div>
+      <div class="mstat"><span class="msk">Axe Digital</span><span class="msv" style="color:var(--purple)">2 projets</span></div>
+      <div class="mstat"><span class="msk">Axe Sécurité</span><span class="msv" style="color:var(--text3)">2 projets</span></div>
+    </div>
+    <div style="margin-top:12px">
+      <div class="card-title" style="margin-bottom:6px"><div class="ct" style="height:14px;background:var(--yellow)"></div>Prochaines décisions PLO requises</div>
+      <div class="ms-item">
+        <div class="ms-date">28 Avr</div>
+        <div class="ms-info"><div class="ms-name">DPX³ — Arbitrage PRS</div><div class="ms-proj">Décision scope + planning requis</div></div>
+        <span class="b b-bad">Urgent</span>
+      </div>
+      <div class="ms-item">
+        <div class="ms-date">15 Mai</div>
+        <div class="ms-info"><div class="ms-name">LS990 — Validation V2</div><div class="ms-proj">Approbation scénario certif. CE</div></div>
+        <span class="b b-warn">J-23</span>
+      </div>
+      <div class="ms-item">
+        <div class="ms-date">Août-25</div>
+        <div class="ms-info"><div class="ms-name">LG-OP-001 — V2 Budget</div><div class="ms-proj">Approbation Sc1 China/India</div></div>
+        <span class="b b-plan">Planifié</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div><!-- /panel-plo -->
+
+<div class="footer">
+  <div class="foot-l">Legrand Group · R&D Limoges &amp; PLO Sophie Renaud · <span class="foot-acc">Planview Project Advantage</span> · BF.29 BF.38 BF.62 BF.90 · Power BI HTML Content</div>
+  <div class="foot-r"><span>Centre Limoges 42 FTE</span><span>27/04/2026</span></div>
+</div>
+
+<script>
+Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size=9;Chart.defaults.color='#5A607A';
+const tc={color:'#5A607A',font:{size:9}};
+const lc={labels:{color:'#374151',font:{size:9},boxWidth:10,padding:8}};
+const gX={grid:{color:'rgba(0,0,0,.04)'},ticks:tc};
+const gY={grid:{color:'rgba(0,0,0,.04)'},ticks:tc};
+
+new Chart(document.getElementById('cCapHisto'),{type:'line',
+  data:{labels:['Avr-25','Mai-25','Juin-25','Juil-25','Août-25'],
+    datasets:[
+      {label:'Électronique',data:[92,118,115,88,75],borderColor:'#C9202E',backgroundColor:'rgba(201,32,46,.08)',borderWidth:2,tension:.4,pointRadius:3,fill:true},
+      {label:'Log. embarqué',data:[85,94,90,82,70],borderColor:'#D48800',backgroundColor:'rgba(212,136,0,.06)',borderWidth:2,tension:.4,pointRadius:3,fill:true},
+      {label:'Connectivité',data:[80,85,88,78,68],borderColor:'#6B29C3',backgroundColor:'rgba(107,41,195,.06)',borderWidth:2,tension:.4,pointRadius:3,fill:true},
+      {label:'Mécanique',data:[70,72,68,65,60],borderColor:'#0E8A4A',backgroundColor:'rgba(14,138,74,.06)',borderWidth:1.5,tension:.4,pointRadius:3},
+      {label:'Qualité',data:[55,56,58,54,50],borderColor:'#1255CC',backgroundColor:'rgba(18,85,204,.06)',borderWidth:1.5,tension:.4,pointRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:lc,tooltip:{bodyFont:{size:10}}},
+    scales:{x:gX,y:{...gY,min:0,max:130,ticks:{...tc,callback:v=>v+'%'},grid:{...gY.grid}}},
+    elements:{point:{hoverRadius:5}}}
+});
+
+new Chart(document.getElementById('cAllocProj'),{type:'bar',
+  data:{labels:['LS990','DPX³ 250','Céliane','KNX Gtw','Autres'],
+    datasets:[
+      {label:'Électronique',data:[8,6,0,2,1],backgroundColor:'rgba(201,32,46,.75)',borderRadius:3},
+      {label:'Log. embarqué',data:[3,2,4,1,0],backgroundColor:'rgba(212,136,0,.75)',borderRadius:3},
+      {label:'Connectivité',data:[2,0,5,2,1],backgroundColor:'rgba(107,41,195,.75)',borderRadius:3},
+      {label:'Mécanique',data:[0,4,1,0,2],backgroundColor:'rgba(14,138,74,.75)',borderRadius:3},
+      {label:'Qualité',data:[1,2,1,1,1],backgroundColor:'rgba(18,85,204,.75)',borderRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{...lc,position:'bottom'},tooltip:{bodyFont:{size:10},callbacks:{label:c=>` ${c.dataset.label}: ${c.raw} FTE`}}},
+    scales:{x:{...gX,stacked:true},y:{...gY,stacked:true,ticks:{...tc,callback:v=>v+' FTE'}}}}
+});
+
+new Chart(document.getElementById('cCapForecast'),{type:'bar',
+  data:{labels:['Juin-25','Juil-25','Août-25','Sept-25'],
+    datasets:[
+      {label:'Électronique (avant réall.)',data:[115,88,75,68],backgroundColor:'rgba(201,32,46,.2)',borderColor:'#C9202E',borderWidth:1.5,borderRadius:3},
+      {label:'Électronique (après réall.)',data:[98,82,72,65],backgroundColor:'rgba(14,138,74,.2)',borderColor:'#0E8A4A',borderWidth:1.5,borderRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:lc,tooltip:{bodyFont:{size:10},callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+    scales:{x:gX,y:{...gY,min:50,max:130,ticks:{...tc,callback:v=>v+'%'}}}}
+});
+
+new Chart(document.getElementById('cScoring'),{type:'radar',
+  data:{labels:['Valeur stratégique','Alignement Groupe','Faisabilité','ROI / Coût','Risque maîtrisé','Innovation'],
+    datasets:[
+      {label:'LS990 Connected',data:[85,80,75,72,65,70],backgroundColor:'rgba(18,85,204,.1)',borderColor:'#1255CC',pointBackgroundColor:'#1255CC',borderWidth:2,pointRadius:3},
+      {label:'DPX³ 250',data:[90,88,60,65,45,55],backgroundColor:'rgba(201,32,46,.1)',borderColor:'#C9202E',pointBackgroundColor:'#C9202E',borderWidth:2,pointRadius:3},
+      {label:'Céliane Netatmo V3',data:[78,82,80,75,78,85],backgroundColor:'rgba(14,138,74,.1)',borderColor:'#0E8A4A',pointBackgroundColor:'#0E8A4A',borderWidth:2,pointRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:lc},
+    scales:{r:{min:0,max:100,ticks:{stepSize:20,font:{size:8},color:'#9298B0'},grid:{color:'rgba(0,0,0,.06)'},pointLabels:{font:{size:9},color:'#2D3561'}}}}
+});
+
+new Chart(document.getElementById('cY3'),{type:'bar',
+  data:{labels:['LS990','DPX³','Céliane','KNX Gtw'],
+    datasets:[
+      {label:'Estimé V0',data:[42,67,31,18],backgroundColor:'rgba(18,85,204,.15)',borderColor:'#1255CC',borderWidth:1.5,borderRadius:3},
+      {label:'Réel Vn',data:[38,null,null,null],backgroundColor:'rgba(14,138,74,.2)',borderColor:'#0E8A4A',borderWidth:1.5,borderRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:lc,tooltip:{bodyFont:{size:10},callbacks:{label:c=>c.raw!==null?` ${c.dataset.label}: ${c.raw}M€`:' —'}}},
+    scales:{x:gX,y:{...gY,ticks:{...tc,callback:v=>v+'M€'}}}}
+});
+
+new Chart(document.getElementById('cBudgetLigne'),{type:'bar',
+  data:{labels:['LS990','DPX³','Céliane','KNX Gtw','LG-OP-001','Autres'],
+    datasets:[
+      {label:'Initial',data:[3.2,5.8,2.1,1.5,5.2,10.6],backgroundColor:'rgba(18,85,204,.15)',borderColor:'#1255CC',borderWidth:1.5,borderRadius:3},
+      {label:'Forecast',data:[3.5,6.4,2.1,1.5,5.2,12.5],backgroundColor:'rgba(212,136,0,.15)',borderColor:'#D48800',borderWidth:1.5,borderRadius:3}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:lc,tooltip:{bodyFont:{size:10},callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}M€`}}},
+    scales:{x:{...gX,ticks:{...tc,font:{size:8}}},y:{...gY,ticks:{...tc,callback:v=>v+'M€'}}}}
+});
+
+new Chart(document.getElementById('cDonutPlo'),{type:'doughnut',
+  data:{labels:['Offer Creation','Non-OC','Innovation'],
+    datasets:[{data:[22.1,5.2,1.1],backgroundColor:['#1255CC','#0E8A4A','#6B29C3'],borderColor:'#fff',borderWidth:3,hoverOffset:4}]},
+  options:{responsive:true,maintainAspectRatio:true,cutout:'68%',
+    plugins:{legend:{display:false},tooltip:{bodyFont:{size:10},callbacks:{label:c=>` ${c.label}: ${c.raw}M€`}}}}
+});
+
+function switchTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
